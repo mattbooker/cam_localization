@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<launch>
+	
+	<!--Camera 1-->
+	<node ns="camera_1" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_1">
+		<param name="width" type="int" value="640" />
+		<param name="height" type="int" value="480" />
+		<param name="fps" type="int" value="30" />
+		<param name="frame" type="string" value="webcam" />
+		<param name="device" type="string" value="/dev/video0" />
+		<param name="auto_focus" type="bool" value="0" />
+	</node>
+	
+	<!--Camera 2-->
+	<node ns="camera_2" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_1">
+		<param name="width" type="int" value="640" />
+		<param name="height" type="int" value="480" />
+		<param name="fps" type="int" value="30" />
+		<param name="frame" type="string" value="webcam" />
+		<param name="device" type="string" value="/dev/video1" />
+		<param name="auto_focus" type="bool" value="0" />
+	</node>
+	
+	<!--Camera 3-->
+	<node ns="camera_3" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_1">
+		<param name="width" type="int" value="640" />
+		<param name="height" type="int" value="480" />
+		<param name="fps" type="int" value="30" />
+		<param name="frame" type="string" value="webcam" />
+		<param name="device" type="string" value="/dev/video2" />
+		<param name="auto_focus" type="bool" value="0" />
+	</node>
+	
+	<!--Camera 4-->
+	<node ns="camera_4" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_1">
+		<param name="width" type="int" value="640" />
+		<param name="height" type="int" value="480" />
+		<param name="fps" type="int" value="30" />
+		<param name="frame" type="string" value="webcam" />
+		<param name="device" type="string" value="/dev/video3" />
+		<param name="auto_focus" type="bool" value="0" />
+	</node>
+	
+	<!--Camera 5-->
+	<node ns="camera_5" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_1">
+		<param name="width" type="int" value="640" />
+		<param name="height" type="int" value="480" />
+		<param name="fps" type="int" value="30" />
+		<param name="frame" type="string" value="webcam" />
+		<param name="device" type="string" value="/dev/video4" />
+		<param name="auto_focus" type="bool" value="0" />
+	</node>
+	
+	<!--Camera 6-->
+	<node ns="camera_6" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_1">
+		<param name="width" type="int" value="640" />
+		<param name="height" type="int" value="480" />
+		<param name="fps" type="int" value="30" />
+		<param name="frame" type="string" value="webcam" />
+		<param name="device" type="string" value="/dev/video5" />
+		<param name="auto_focus" type="bool" value="0" />
+	</node>
+
+	<!-- Localization -->
+	<node name="localizer" pkg="cam_localization" type="localizer" output="screen">
+		<param name="number_of_cameras" type="int" value="6" />
+	</node>
+</launch>
+

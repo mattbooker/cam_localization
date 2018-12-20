@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+	<!--Camera 1-->
+	<node ns="camera_1" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_1">
+		<param name="width" type="int" value="640" />
+		<param name="height" type="int" value="480" />
+		<param name="fps" type="int" value="30" />
+		<param name="frame" type="string" value="webcam" />
+		<param name="device" type="string" value="/dev/video0" />
+		<param name="auto_focus" type="bool" value="0" />
+	</node>
+
+	<!--Camera 2-->
+	<node ns="camera_2" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_2">
+		<param name="width" type="int" value="640" />
+		<param name="height" type="int" value="480" />
+		<param name="fps" type="int" value="30" />
+		<param name="frame" type="string" value="webcam" />
+		<param name="device" type="string" value="/dev/video1" />
+		<param name="auto_focus" type="bool" value="0" />
+	</node>
+
+	<!-- Absolute Localization -->
+	<node name="abs" pkg="coop_localization" type="cam_merge"/>
+	
+	<node name="central_processing" pkg="coop_localization" type="central_processing"/>
+</launch>
+
