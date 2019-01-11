@@ -35,6 +35,13 @@ catkin_package(CATKIN_DEPENDS
   tf 
 )
 
+add_library(CameraGraphCalibrator src/CameraGraphCalibrator.cpp)
+target_link_libraries(CameraGraphCalibrator
+  ${OpenCV_LIBS}
+  ${catkin_LIBRARIES}
+  ${aruco_LIBS}
+)
+
 add_library(CameraGraph src/CameraGraph.cpp)
 target_link_libraries(CameraGraph
   ${OpenCV_LIBS}
@@ -54,7 +61,7 @@ target_link_libraries(calibrate
   ${OpenCV_LIBS}
   ${catkin_LIBRARIES}
   ${aruco_LIBS}
-  CameraGraph
+  CameraGraphCalibrator
 )
 
 

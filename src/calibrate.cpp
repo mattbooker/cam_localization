@@ -17,20 +17,20 @@
 #include <ros/ros.h>
 #include <stdlib.h> // getenv
 #include <string>
-#include <map>
+#include <unordered_map>
 
-#include "CameraGraph.hpp"
+#include "CameraGraphCalibrator.hpp"
 
 using namespace cv;
 
 std::string window_name = "Camera Localizer ";
 int origin_camera_id;
-CameraGraph calibrator;
+CameraGraphCalibrator calibrator;
 
 aruco::CameraParameters cam;
 aruco::MarkerDetector marker_detector;
 std::vector<aruco::Marker> markers_list;
-std::map<int, Point2f> anchor_pos; // {camera_id, Point}
+std::unordered_map<int, Point2f> anchor_pos; // {camera_id, Point}
 
 Point2f adjustPos(int camera_id, Point2f pos_in_camera) {
 	if(camera_id == origin_camera_id)
@@ -56,26 +56,28 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 
 		if(marker.isPoseValid()) {
 
-			calibrator.addVertexInfo(camera_id, marker);
 
 			std::vector<Point3f> zero;
 			zero.push_back(Point3f(0,0,0));
-			std::vector<Point2f> origin_of_marker;
+			std::vector<Point2f> marker_pos;
 
 			// Takes the input coordinates (in this case zero) and uses the Rvec, Tvec and camera parameters to project the input
 			// coordinates onto the image plane (refer to OpenCV docs for a diagram)
-			projectPoints(zero, marker.Rvec, marker.Tvec, cam.CameraMatrix, cam.Distorsion, origin_of_marker);
+			projectPoints(zero, marker.Rvec, marker.Tvec, cam.CameraMatrix, cam.Distorsion, marker_pos);
+
+			calibrator.addVertexInfo(camera_id, marker, marker_pos[0]);
 
 			// Save the coordinates of the marker
-			anchor_pos[camera_id] = origin_of_marker[0];
+			anchor_pos[camera_id] = marker_pos[0];
 
 			// Get the position w.r.t the origin camera
-			Point2f global_pos = adjustPos(camera_id, origin_of_marker[0]);
+			// Point2f global_pos = adjustPos(camera_id, marker_pos[0]);
+
+			Point2f global_pos = calibrator.getGlobalPos(camera_id, marker_pos[0]);
 
 			std::string pos = std::to_string(global_pos.x) + ", " + std::to_string(global_pos.y);
 
-			putText(cv_image->image, pos, origin_of_marker[0],  FONT_HERSHEY_PLAIN, 1, (255,255,255));
-			std::cout << "camera: " << camera_id << ". x: " << origin_of_marker[0].x << ", y: " << origin_of_marker[0].y << std::endl;
+			putText(cv_image->image, pos, marker_pos[0],  FONT_HERSHEY_PLAIN, 1, (255,255,255));
 		}
 	}
 
@@ -101,9 +103,9 @@ int main(int argc, char **argv)
 
 	int number_of_cameras;
 	param_nh.param<int>("number_of_cameras", number_of_cameras, 0);
-	param_nh.param<int>("origin_camera_id", origin_camera_id, 1);
+	param_nh.param<int>("origin_camera_id", origin_camera_id, 2);
 
-	calibrator = CameraGraph(number_of_cameras, origin_camera_id);
+	calibrator = CameraGraphCalibrator(number_of_cameras, origin_camera_id);
 
 	std::string cam_file = "/home/solmaz/Booker/src/cam_localization/calibration/cam.yml";
 	cam.readFromXMLFile(cam_file.c_str());
@@ -127,8 +129,12 @@ int main(int argc, char **argv)
 	// Need to ensure all cameras are linked to one another
 	if(!calibrator.isConnected()) {
 		ROS_ERROR("Calibration Error: You do not have markers connecting all cameras.");
+	} else {
+		calibrator.saveGraph("/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.txt");
 	}
 
+
+	ros::spin();
 
 
 

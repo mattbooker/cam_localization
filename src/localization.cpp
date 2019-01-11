@@ -17,7 +17,7 @@
 #include <ros/ros.h>
 #include <stdlib.h> // getenv
 #include <string>
-#include <map>
+#include <unordered_map>
 
 using namespace cv;
 
@@ -26,9 +26,9 @@ std::string window_name = "Camera Localizer ";
 aruco::CameraParameters cam;
 aruco::MarkerDetector marker_detector;
 std::vector<aruco::Marker> markers_list;
-typedef std::map<int, std::map<int, aruco::Marker>> MarkerMap;
+typedef std::unordered_map<int, std::unordered_map<int, aruco::Marker>> MarkerMap;
 MarkerMap global_marker_map; //MarkerMap = {marker.id: {camera_id: marker}}
-std::map<int, Point2f> anchor_pos; // {camera_id, Point}
+std::unordered_map<int, Point2f> anchor_pos; // {camera_id, Point}
 
 Point2f adjustPos(int camera_id, Point2f pos_in_camera) {
 	if(camera_id == 1)
