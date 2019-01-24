@@ -28,6 +28,6 @@ void CameraGraph::loadGraph(std::string file_path) {
 
 }
 
-cv::Point2f getGlobalPos(int camera_id, cv::Point2f pos_in_camera) {
+cv::Point2f CameraGraph::getGlobalPos(int camera_id, cv::Point2f pos_in_camera) {
   return pos_in_camera + cam_coordinate_adjustments.at(camera_id);
 }

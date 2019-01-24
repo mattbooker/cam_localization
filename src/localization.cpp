@@ -19,6 +19,8 @@
 #include <string>
 #include <unordered_map>
 
+#include "CameraGraph.hpp"
+
 using namespace cv;
 
 std::string window_name = "Camera Localizer ";
@@ -26,19 +28,8 @@ std::string window_name = "Camera Localizer ";
 aruco::CameraParameters cam;
 aruco::MarkerDetector marker_detector;
 std::vector<aruco::Marker> markers_list;
-typedef std::unordered_map<int, std::unordered_map<int, aruco::Marker>> MarkerMap;
-MarkerMap global_marker_map; //MarkerMap = {marker.id: {camera_id: marker}}
-std::unordered_map<int, Point2f> anchor_pos; // {camera_id, Point}
 
-Point2f adjustPos(int camera_id, Point2f pos_in_camera) {
-	if(camera_id == 1)
-		return pos_in_camera;
-
-	Point2f	difference_from_anchor = anchor_pos[1] - pos_in_camera;
-
-	return pos_in_camera + difference_from_anchor;
-
-}
+CameraGraph camGraph;
 
 //This function is called everytime a new image is published
 void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
@@ -54,19 +45,12 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 
 	for(auto& marker : markers_list) {
 
-		// Add/update the marker in the general_marker_map
-		global_marker_map[marker.id][camera_id] = marker;
-
 		// aruco::CvDrawingUtils::draw3dAxis(cv_image->image,marker,cam);
 
 		//draw in the image
 		// marker.draw(cv_image->image);
 
 		if(marker.isPoseValid()) {
-			x = marker.Tvec.at<Vec3f>(0,0)[0];
-			y = marker.Tvec.at<Vec3f>(0,0)[1];
-			z = marker.Tvec.at<Vec3f>(0,0)[2];
-			// std::cout << "x: " << x << ", y: " << y << ", z: " << z << std::endl;
 
 			std::vector<Point3f> axisPoints;
 			std::vector<Point2f> origin_of_marker;
@@ -75,11 +59,9 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 
 			projectPoints(axisPoints, marker.Rvec, marker.Tvec, cam.CameraMatrix, cam.Distorsion, origin_of_marker);
 
-			anchor_pos[camera_id] = origin_of_marker[0];
+			Point2f global_pos = camGraph.getGlobalPos(camera_id, origin_of_marker[0]);
 
-			Point2f relative_pos = adjustPos(camera_id, origin_of_marker[0]);
-
-			std::string pos = std::to_string(relative_pos.x) + ", " + std::to_string(relative_pos.y);
+			std::string pos = std::to_string(global_pos.x) + ", " + std::to_string(global_pos.y);
 
 			putText(cv_image->image, pos, origin_of_marker[0],  FONT_HERSHEY_PLAIN, 1, (255,255,255));
 			std::cout << "camera: " << camera_id << ". x: " << origin_of_marker[0].x << ", y: " << origin_of_marker[0].y << std::endl;
@@ -107,10 +89,17 @@ int main(int argc, char **argv)
 	ros::NodeHandle param_nh("~");	// This NodeHandle is for getting parameters
 
 	int number_of_cameras;
+	int origin_camera_id;
 	param_nh.param<int>("number_of_cameras", number_of_cameras, 0);
+	param_nh.param<int>("origin_camera_id", origin_camera_id, 0);
+
+	std::cout << number_of_cameras << " " << origin_camera_id << std::endl;
 
 	std::string cam_file = "/home/solmaz/Booker/src/cam_localization/calibration/cam.yml";
 	cam.readFromXMLFile(cam_file.c_str());
+
+	camGraph = CameraGraph(number_of_cameras, origin_camera_id);
+	camGraph.loadGraph("/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.yml");
 
 	image_transport::ImageTransport it(nh);
 

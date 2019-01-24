@@ -71,8 +71,6 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 			anchor_pos[camera_id] = marker_pos[0];
 
 			// Get the position w.r.t the origin camera
-			// Point2f global_pos = adjustPos(camera_id, marker_pos[0]);
-
 			Point2f global_pos = calibrator.getGlobalPos(camera_id, marker_pos[0]);
 
 			std::string pos = std::to_string(global_pos.x) + ", " + std::to_string(global_pos.y);
@@ -103,7 +101,7 @@ int main(int argc, char **argv)
 
 	int number_of_cameras;
 	param_nh.param<int>("number_of_cameras", number_of_cameras, 0);
-	param_nh.param<int>("origin_camera_id", origin_camera_id, 2);
+	param_nh.param<int>("origin_camera_id", origin_camera_id, 1);
 
 	calibrator = CameraGraphCalibrator(number_of_cameras, origin_camera_id);
 
@@ -130,7 +128,7 @@ int main(int argc, char **argv)
 	if(!calibrator.isConnected()) {
 		ROS_ERROR("Calibration Error: You do not have markers connecting all cameras.");
 	} else {
-		calibrator.saveGraph("/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.txt");
+		calibrator.saveGraph("/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.yml");
 	}
 
 

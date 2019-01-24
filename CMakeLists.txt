@@ -54,6 +54,7 @@ target_link_libraries(localizer
   ${OpenCV_LIBS}
   ${catkin_LIBRARIES}
   ${aruco_LIBS}
+  CameraGraph
 )
 
 add_executable(calibrate src/calibrate.cpp)
