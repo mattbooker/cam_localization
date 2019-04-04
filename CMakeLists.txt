@@ -73,3 +73,8 @@ target_link_libraries(2cam_localizer
   ${aruco_LIBS}
 )
 
+add_executable(opencv_calibration src/opencv_calibration.cpp)
+target_link_libraries(opencv_calibration
+  ${OpenCV_LIBS}
+  ${catkin_LIBRARIES}
+)

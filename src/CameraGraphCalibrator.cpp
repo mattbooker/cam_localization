@@ -75,13 +75,17 @@ void CameraGraphCalibrator::saveGraph(std::string file_path) {
     std::string cam = "cam_" + std::to_string(n.first);
     cam_adjustments_file << cam << n.second;
   }
+
+  cam_adjustments_file.release();
 }
 
 cv::Point2f CameraGraphCalibrator::getGlobalPos(int camera_id, cv::Point2f pos_in_camera) {
 
+  // If the camera id exists in our graph then return it with the respective adjustments
   if(cam_coordinate_adjustments.count(camera_id) == 1)
     return pos_in_camera + cam_coordinate_adjustments.at(camera_id);
 
+  // Otherwise return its position
   return pos_in_camera;
 }
 

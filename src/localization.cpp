@@ -38,8 +38,11 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 	cv_bridge::CvImagePtr cv_image;
 	cv_image = cv_bridge::toCvCopy(original_image, sensor_msgs::image_encodings::BGR8);
 
+	Mat undistorted_image;
+	undistort(cv_image->image, undistorted_image, cam.CameraMatrix, cam.Distorsion);
+
 	//Call to Aruco to identify markers
-	markers_list = marker_detector.detect(cv_image->image, cam, 0.14);	//0.14m is the large rect
+	markers_list = marker_detector.detect(undistorted_image, cam, 0.14);	//0.14m is the large rect
 
 	float x = 0, y = 0, z = 0;
 
@@ -52,19 +55,17 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 
 		if(marker.isPoseValid()) {
 
-			std::vector<Point3f> axisPoints;
+			std::vector<Point3f> zero;
+			zero.push_back(Point3f(0, 0, 0));
 			std::vector<Point2f> origin_of_marker;
 
-			axisPoints.push_back(Point3f(0, 0, 0));
-
-			projectPoints(axisPoints, marker.Rvec, marker.Tvec, cam.CameraMatrix, cam.Distorsion, origin_of_marker);
+			projectPoints(zero, marker.Rvec, marker.Tvec, cam.CameraMatrix, cam.Distorsion, origin_of_marker);
 
 			Point2f global_pos = camGraph.getGlobalPos(camera_id, origin_of_marker[0]);
 
-			std::string pos = std::to_string(global_pos.x) + ", " + std::to_string(global_pos.y);
+			std::string pos = std::to_string(int(global_pos.x)) + ", " + std::to_string(int(global_pos.y));
 
-			putText(cv_image->image, pos, origin_of_marker[0],  FONT_HERSHEY_PLAIN, 1, (255,255,255));
-			std::cout << "camera: " << camera_id << ". x: " << origin_of_marker[0].x << ", y: " << origin_of_marker[0].y << std::endl;
+			putText(undistorted_image, pos, origin_of_marker[0],  FONT_HERSHEY_PLAIN, 2, Scalar(0,0,255));
 		}
 	}
 
@@ -75,9 +76,7 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 
 	std::string final_name = window_name + std::to_string(camera_id);
 
-
-  // cv::line(cv_image->image, Point(0,0), Point(x, y), Scalar(255,255,255));
-	cv::imshow(final_name, cv_image->image);
+	cv::imshow(final_name, undistorted_image);
 	cv::waitKey(1); //Add some delay in miliseconds.
 
 }
@@ -90,13 +89,16 @@ int main(int argc, char **argv)
 
 	int number_of_cameras;
 	int origin_camera_id;
+	string camera_calibration_file;
 	param_nh.param<int>("number_of_cameras", number_of_cameras, 0);
 	param_nh.param<int>("origin_camera_id", origin_camera_id, 0);
+	param_nh.param<string>("camera_calibration_file", camera_calibration_file, " ");
 
 	std::cout << number_of_cameras << " " << origin_camera_id << std::endl;
+	cam.readFromXMLFile(camera_calibration_file.c_str());
 
-	std::string cam_file = "/home/solmaz/Booker/src/cam_localization/calibration/cam.yml";
-	cam.readFromXMLFile(cam_file.c_str());
+	// Ensure our camera intrinsics size matches our input video resolution
+	cam.resize(Size(640,480));
 
 	camGraph = CameraGraph(number_of_cameras, origin_camera_id);
 	camGraph.loadGraph("/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.yml");

@@ -30,17 +30,6 @@ CameraGraphCalibrator calibrator;
 aruco::CameraParameters cam;
 aruco::MarkerDetector marker_detector;
 std::vector<aruco::Marker> markers_list;
-std::unordered_map<int, Point2f> anchor_pos; // {camera_id, Point}
-
-Point2f adjustPos(int camera_id, Point2f pos_in_camera) {
-	if(camera_id == origin_camera_id)
-		return pos_in_camera;
-
-	Point2f	difference_from_anchor = anchor_pos[origin_camera_id] - pos_in_camera;
-
-	return pos_in_camera + difference_from_anchor;
-
-}
 
 //This function is called everytime a new image is published
 void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
@@ -49,46 +38,43 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 	cv_bridge::CvImagePtr cv_image;
 	cv_image = cv_bridge::toCvCopy(original_image, sensor_msgs::image_encodings::BGR8);
 
+	Mat undistorted_image;
+	undistort(cv_image->image, undistorted_image, cam.CameraMatrix, cam.Distorsion);
+
 	//Call to Aruco to identify markers
-	markers_list = marker_detector.detect(cv_image->image, cam, 0.14);	//0.14m is the large rect
+	markers_list = marker_detector.detect(undistorted_image, cam, 0.14);	//0.14m is the large rect
 
 	for(auto& marker : markers_list) {
 
 		if(marker.isPoseValid()) {
 
-
 			std::vector<Point3f> zero;
 			zero.push_back(Point3f(0,0,0));
 			std::vector<Point2f> marker_pos;
 
-			// Takes the input coordinates (in this case zero) and uses the Rvec, Tvec and camera parameters to project the input
-			// coordinates onto the image plane (refer to OpenCV docs for a diagram)
+			// Takes the input coordinates (in this case zero) and uses the Rvec, Tvec and camera parameters
+			// to project the input coordinates onto the image plane (refer to OpenCV docs for a diagram)
 			projectPoints(zero, marker.Rvec, marker.Tvec, cam.CameraMatrix, cam.Distorsion, marker_pos);
 
 			calibrator.addVertexInfo(camera_id, marker, marker_pos[0]);
 
-			// Save the coordinates of the marker
-			anchor_pos[camera_id] = marker_pos[0];
-
-			// Get the position w.r.t the origin camera
+			// Get the position w.r.t the origin camera (This is for after the calibration to check if it was successful)
 			Point2f global_pos = calibrator.getGlobalPos(camera_id, marker_pos[0]);
 
 			std::string pos = std::to_string(global_pos.x) + ", " + std::to_string(global_pos.y);
 
-			putText(cv_image->image, pos, marker_pos[0],  FONT_HERSHEY_PLAIN, 1, (255,255,255));
+			putText(undistorted_image, pos, marker_pos[0],  FONT_HERSHEY_PLAIN, 1, (255,255,255));
+
+			//marker.draw(cv_image->image);
+			// std::cout << camera_id << " " << marker.id << " " << marker.Tvec.at<float>(0) << " " << marker.Tvec.at<float>(1)  << " " << marker.Tvec.at<float>(2) << std::endl;
 		}
 	}
-
-
-
-
-
 
 	std::string final_name = window_name + std::to_string(camera_id);
 
 
   // cv::line(cv_image->image, Point(0,0), Point(x, y), Scalar(255,255,255));
-	cv::imshow(final_name, cv_image->image);
+	cv::imshow(final_name, undistorted_image);
 	cv::waitKey(1); //Add some delay in miliseconds.
 
 }
@@ -100,13 +86,16 @@ int main(int argc, char **argv)
 	ros::NodeHandle param_nh("~");	// This NodeHandle is for getting parameters
 
 	int number_of_cameras;
+	string camera_calibration_file;
 	param_nh.param<int>("number_of_cameras", number_of_cameras, 0);
 	param_nh.param<int>("origin_camera_id", origin_camera_id, 1);
+	param_nh.param<string>("camera_calibration_file", camera_calibration_file, " ");
 
 	calibrator = CameraGraphCalibrator(number_of_cameras, origin_camera_id);
+	cam.readFromXMLFile(camera_calibration_file.c_str());
 
-	std::string cam_file = "/home/solmaz/Booker/src/cam_localization/calibration/cam.yml";
-	cam.readFromXMLFile(cam_file.c_str());
+	// Ensure our camera intrinsics size matches our input video resolution
+	cam.resize(Size(640,480));
 
 	image_transport::ImageTransport it(nh);
 
@@ -129,6 +118,7 @@ int main(int argc, char **argv)
 		ROS_ERROR("Calibration Error: You do not have markers connecting all cameras.");
 	} else {
 		calibrator.saveGraph("/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.yml");
+		ROS_INFO("Succesfully configured cameras");
 	}
 
 
