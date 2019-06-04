@@ -32,14 +32,14 @@
 	</node>
 	
 	<!--Camera 4-->
-	<node ns="camera_4" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_4">
+	<!--node ns="camera_4" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_4">
 		<param name="width" type="int" value="640" />
 		<param name="height" type="int" value="480" />
 		<param name="fps" type="int" value="30" />
 		<param name="frame" type="string" value="webcam" />
 		<param name="device" type="string" value="/dev/v4l/by-id/usb-046d_HD_Pro_Webcam_C920_3F21565F-video-index0" />
 		<param name="auto_focus" type="bool" value="0" />
-	</node>
+	</node-->
 	
 	<!--Camera 5-->
 	<node ns="camera_5" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera_node_5">

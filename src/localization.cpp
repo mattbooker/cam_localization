@@ -48,10 +48,10 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 
 	for(auto& marker : markers_list) {
 
-		// aruco::CvDrawingUtils::draw3dAxis(cv_image->image,marker,cam);
+		aruco::CvDrawingUtils::draw3dAxis(undistorted_image,marker,cam);
 
 		//draw in the image
-		// marker.draw(cv_image->image);
+		marker.draw(undistorted_image);
 
 		if(marker.isPoseValid()) {
 
@@ -65,14 +65,9 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 
 			std::string pos = std::to_string(int(global_pos.x)) + ", " + std::to_string(int(global_pos.y));
 
-			putText(undistorted_image, pos, origin_of_marker[0],  FONT_HERSHEY_PLAIN, 2, Scalar(0,0,255));
+			putText(undistorted_image, pos, origin_of_marker[0] - Point2f(50, 50),  FONT_HERSHEY_PLAIN, 2, Scalar(0,0,255));
 		}
 	}
-
-
-
-
-
 
 	std::string final_name = window_name + std::to_string(camera_id);
 
@@ -101,7 +96,7 @@ int main(int argc, char **argv)
 	cam.resize(Size(640,480));
 
 	camGraph = CameraGraph(number_of_cameras, origin_camera_id);
-	camGraph.loadGraph("/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.yml");
+	camGraph.loadGraph("../calibration/camera_graph.yml");
 
 	image_transport::ImageTransport it(nh);
 

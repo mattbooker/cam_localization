@@ -1,4 +1,4 @@
-//Matthew Booker, UCI, 2018
+// Matthew Booker, UCI, 2018
 
 // OpenCV and Aruco
 #include <opencv2/imgproc/imgproc.hpp>
@@ -38,6 +38,7 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 	cv_bridge::CvImagePtr cv_image;
 	cv_image = cv_bridge::toCvCopy(original_image, sensor_msgs::image_encodings::BGR8);
 
+	// Undistort the image
 	Mat undistorted_image;
 	undistort(cv_image->image, undistorted_image, cam.CameraMatrix, cam.Distorsion);
 
@@ -50,30 +51,21 @@ void image_cb(const sensor_msgs::ImageConstPtr& original_image, int camera_id)
 
 			std::vector<Point3f> zero;
 			zero.push_back(Point3f(0,0,0));
+			zero.push_back(Point3f(0,0,1));
 			std::vector<Point2f> marker_pos;
 
 			// Takes the input coordinates (in this case zero) and uses the Rvec, Tvec and camera parameters
 			// to project the input coordinates onto the image plane (refer to OpenCV docs for a diagram)
 			projectPoints(zero, marker.Rvec, marker.Tvec, cam.CameraMatrix, cam.Distorsion, marker_pos);
 
+			// Add the marker to our calibrator
 			calibrator.addVertexInfo(camera_id, marker, marker_pos[0]);
-
-			// Get the position w.r.t the origin camera (This is for after the calibration to check if it was successful)
-			Point2f global_pos = calibrator.getGlobalPos(camera_id, marker_pos[0]);
-
-			std::string pos = std::to_string(global_pos.x) + ", " + std::to_string(global_pos.y);
-
-			putText(undistorted_image, pos, marker_pos[0],  FONT_HERSHEY_PLAIN, 1, (255,255,255));
-
-			//marker.draw(cv_image->image);
-			// std::cout << camera_id << " " << marker.id << " " << marker.Tvec.at<float>(0) << " " << marker.Tvec.at<float>(1)  << " " << marker.Tvec.at<float>(2) << std::endl;
 		}
 	}
 
 	std::string final_name = window_name + std::to_string(camera_id);
 
 
-  // cv::line(cv_image->image, Point(0,0), Point(x, y), Scalar(255,255,255));
 	cv::imshow(final_name, undistorted_image);
 	cv::waitKey(1); //Add some delay in miliseconds.
 
@@ -117,13 +109,9 @@ int main(int argc, char **argv)
 	if(!calibrator.isConnected()) {
 		ROS_ERROR("Calibration Error: You do not have markers connecting all cameras.");
 	} else {
-		calibrator.saveGraph("/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.yml");
+		calibrator.saveGraph("../calibration/camera_graph.yml");
 		ROS_INFO("Succesfully configured cameras");
 	}
-
-
-	ros::spin();
-
 
 
 	return 0;
