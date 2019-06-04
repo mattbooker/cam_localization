@@ -6,9 +6,10 @@
 
 	<!-- Calibrator -->
 	<node name="calibrate" pkg="cam_localization" type="calibrate" output="screen">
-		<param name="number_of_cameras" type="int" value="2" />
+		<param name="number_of_cameras" type="int" value="6" />
 		<param name="origin_camera_id" type="int" value="1" />
 		<param name="camera_calibration_file" type="string" value="/home/solmaz/Booker/src/cam_localization/calibration/out_camera_data.xml" />
+		<param name="camera_graph_file" type="string" value="/home/solmaz/Booker/src/cam_localization/calibration/camera_graph.yml" />
 	</node>
 </launch>
 

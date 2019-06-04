@@ -79,9 +79,11 @@ int main(int argc, char **argv)
 
 	int number_of_cameras;
 	string camera_calibration_file;
+	string camera_graph_file;
 	param_nh.param<int>("number_of_cameras", number_of_cameras, 0);
 	param_nh.param<int>("origin_camera_id", origin_camera_id, 1);
 	param_nh.param<string>("camera_calibration_file", camera_calibration_file, " ");
+	param_nh.param<string>("camera_graph_file", camera_graph_file, " ");
 
 	calibrator = CameraGraphCalibrator(number_of_cameras, origin_camera_id);
 	cam.readFromXMLFile(camera_calibration_file.c_str());
@@ -109,7 +111,7 @@ int main(int argc, char **argv)
 	if(!calibrator.isConnected()) {
 		ROS_ERROR("Calibration Error: You do not have markers connecting all cameras.");
 	} else {
-		calibrator.saveGraph("../calibration/camera_graph.yml");
+		calibrator.saveGraph(camera_graph_file.c_str());
 		ROS_INFO("Succesfully configured cameras");
 	}
 

@@ -8,13 +8,13 @@ void CameraGraph::loadGraph(std::string file_path) {
   cam_adjustments_file["number_of_cameras"]  >> file_num_of_cams;
   cam_adjustments_file["origin_camera_id"] >> file_origin_camera_id;
 
-  if(file_num_of_cams < number_of_cameras) {
-    throw cv::Exception(9007, "File :" + file_path + " is calibrated for less cameras than specified",
+  if(file_num_of_cams != number_of_cameras) {
+    throw cv::Exception(9007, "File :" + file_path + " is calibrated for " + std::to_string(file_num_of_cams) + " cameras. Expected " + std::to_string(number_of_cameras) + " cameras.",
                                     "CameraGraph::loadGraph", __FILE__, __LINE__);
   }
 
   if(file_origin_camera_id != origin_camera_id) {
-    throw cv::Exception(9007, "File :" + file_path + " is calibrated for a different origin camera than specified",
+    throw cv::Exception(9007, "File :" + file_path + " is calibrated for origin at " + std::to_string(file_origin_camera_id) + ". Expected origin camera at " + std::to_string(origin_camera_id),
                                     "CameraGraph::loadGraph", __FILE__, __LINE__);
   }
 

@@ -1,6 +1,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <unordered_map>
+#include <string>
 
 class CameraGraph {
 public:

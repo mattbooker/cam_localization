@@ -85,18 +85,19 @@ int main(int argc, char **argv)
 	int number_of_cameras;
 	int origin_camera_id;
 	string camera_calibration_file;
+	string camera_graph_file;
 	param_nh.param<int>("number_of_cameras", number_of_cameras, 0);
 	param_nh.param<int>("origin_camera_id", origin_camera_id, 0);
 	param_nh.param<string>("camera_calibration_file", camera_calibration_file, " ");
+	param_nh.param<string>("camera_graph_file", camera_graph_file, " ");
 
-	std::cout << number_of_cameras << " " << origin_camera_id << std::endl;
 	cam.readFromXMLFile(camera_calibration_file.c_str());
 
 	// Ensure our camera intrinsics size matches our input video resolution
 	cam.resize(Size(640,480));
 
 	camGraph = CameraGraph(number_of_cameras, origin_camera_id);
-	camGraph.loadGraph("../calibration/camera_graph.yml");
+	camGraph.loadGraph(camera_graph_file.c_str());
 
 	image_transport::ImageTransport it(nh);
 
